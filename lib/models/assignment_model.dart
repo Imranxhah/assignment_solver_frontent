@@ -2,14 +2,20 @@ class AssignmentSubmission {
   final String subjectName;
   final String assignmentNumber;
   final String tutorName;
-  final String filePath;
+  final String? filePath; // ✅ OPTIONAL - null when text mode
+  final String? assignmentText; // ✅ OPTIONAL - null when file mode
 
   AssignmentSubmission({
     required this.subjectName,
     required this.assignmentNumber,
     required this.tutorName,
-    required this.filePath,
+    this.filePath, // Optional
+    this.assignmentText, // Optional
   });
+
+  // Helper method to check submission type
+  bool get isFileUpload => filePath != null;
+  bool get isTextInput => assignmentText != null;
 }
 
 class AssignmentResponse {

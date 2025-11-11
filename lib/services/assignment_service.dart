@@ -1,4 +1,4 @@
-import 'dart:convert';
+import 'package:dio/dio.dart';
 import '../utils/constants.dart';
 import '../models/assignment_model.dart';
 import 'api_service.dart';
@@ -7,11 +7,12 @@ class AssignmentService {
   // Check submission limit
   static Future<Map<String, dynamic>> checkSubmissionLimit() async {
     try {
-      final response = await ApiService.get(AppConstants.checkLimitUrl);
+      final Response response =
+          await ApiService.get(AppConstants.checkLimitUrl);
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final limit = SubmissionLimit.fromJson(data);
+        // ✅ response.data is already parsed JSON (no jsonDecode needed)
+        final limit = SubmissionLimit.fromJson(response.data);
 
         return {
           'success': true,
@@ -31,7 +32,7 @@ class AssignmentService {
     }
   }
 
-  // Submit assignment
+  // Submit assignment (handles both file and text)
   static Future<Map<String, dynamic>> submitAssignment(
     AssignmentSubmission submission,
   ) async {
@@ -42,18 +43,36 @@ class AssignmentService {
         'tutor_name': submission.tutorName,
       };
 
-      final response = await ApiService.multipartPost(
-        AppConstants.submitAssignmentUrl,
-        fields,
-        submission.filePath,
-        'file',
-      );
+      // ✅ Add assignment text if provided (text mode)
+      if (submission.assignmentText != null &&
+          submission.assignmentText!.isNotEmpty) {
+        fields['assignment_text'] = submission.assignmentText!;
+      }
 
-      final responseBody = await response.stream.bytesToString();
-      final data = jsonDecode(responseBody);
+      Response response;
 
+      // ✅ Check if file upload or text mode
+      if (submission.filePath != null && submission.filePath!.isNotEmpty) {
+        // File upload mode
+        response = await ApiService.multipartPost(
+          AppConstants.submitAssignmentUrl,
+          fields,
+          submission.filePath!,
+          'file',
+        );
+      } else {
+        // Text mode - use multipart POST without file
+        response = await ApiService.multipartPost(
+          AppConstants.submitAssignmentUrl,
+          fields,
+          null, // ✅ No file
+          'file',
+        );
+      }
+
+      // ✅ Dio automatically parses JSON, no need for bytesToString or jsonDecode
       if (response.statusCode == 200) {
-        final assignmentResponse = AssignmentResponse.fromJson(data);
+        final assignmentResponse = AssignmentResponse.fromJson(response.data);
 
         return {
           'success': true,
@@ -62,7 +81,7 @@ class AssignmentService {
       } else {
         return {
           'success': false,
-          'message': data['message'] ?? 'Failed to submit assignment.',
+          'message': response.data['message'] ?? 'Failed to submit assignment.',
         };
       }
     } catch (e) {

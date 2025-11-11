@@ -163,6 +163,7 @@ class _FilePickerWidgetState extends State<FilePickerWidget> {
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           _fileName ?? '',
@@ -174,6 +175,7 @@ class _FilePickerWidgetState extends State<FilePickerWidget> {
                         ),
                         const SizedBox(height: 6),
                         Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Container(
                               padding: const EdgeInsets.symmetric(
@@ -232,92 +234,106 @@ class _FilePickerWidgetState extends State<FilePickerWidget> {
       );
     }
 
-    return InkWell(
-      onTap: _pickFile,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        constraints: const BoxConstraints(
-          minHeight: 160,
-        ),
-        decoration: BoxDecoration(
-          color: theme.cardColor,
+    // ✅ FIXED: Using LayoutBuilder to adapt to available space
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return InkWell(
+          onTap: _pickFile,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: colorScheme.primary.withOpacity(0.3),
-            width: 2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: colorScheme.primary.withOpacity(0.08),
-              blurRadius: 15,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.all(28),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    colorScheme.primary.withOpacity(0.1),
-                    colorScheme.primary.withOpacity(0.05),
-                  ],
+          child: Container(
+            height: constraints.maxHeight,
+            decoration: BoxDecoration(
+              color: theme.cardColor,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: colorScheme.primary.withOpacity(0.3),
+                width: 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: colorScheme.primary.withOpacity(0.08),
+                  blurRadius: 15,
+                  offset: const Offset(0, 4),
                 ),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Iconsax.document_upload,
-                size: 44,
-                color: colorScheme.primary,
-              ),
+              ],
             ),
-            const SizedBox(height: 16),
-            Text(
-              'Upload Your Assignment',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'Tap to browse files',
-              style: theme.textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              alignment: WrapAlignment.center,
-              children: widget.allowedExtensions.map((ext) {
-                return Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: colorScheme.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: colorScheme.primary.withOpacity(0.2),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            // ✅ Changed to SingleChildScrollView to handle overflow gracefully
+            child: SingleChildScrollView(
+              physics: const NeverScrollableScrollPhysics(),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          colorScheme.primary.withOpacity(0.1),
+                          colorScheme.primary.withOpacity(0.05),
+                        ],
+                      ),
+                      shape: BoxShape.circle,
                     ),
-                  ),
-                  child: Text(
-                    ext.toUpperCase(),
-                    style: theme.textTheme.labelSmall?.copyWith(
+                    child: Icon(
+                      Iconsax.document_upload,
+                      size: 40,
                       color: colorScheme.primary,
-                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                );
-              }).toList(),
+                  const SizedBox(height: 14),
+                  Text(
+                    'Upload Your Assignment',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    'Tap to browse files',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontSize: 13,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    alignment: WrapAlignment.center,
+                    children: widget.allowedExtensions.map((ext) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colorScheme.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: colorScheme.primary.withOpacity(0.2),
+                          ),
+                        ),
+                        child: Text(
+                          ext.toUpperCase(),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: colorScheme.primary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 11,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

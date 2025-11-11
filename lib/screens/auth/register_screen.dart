@@ -18,14 +18,14 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
-  final _usernameController = TextEditingController();
+  // ❌ REMOVED: final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
   @override
   void dispose() {
     _emailController.dispose();
-    _usernameController.dispose();
+    // ❌ REMOVED: _usernameController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -68,9 +68,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final email = _emailController.text.trim();
 
+      // ✅ UPDATED: Removed username parameter
       final success = await authProvider.register(
         email: email,
-        username: _usernameController.text.trim(),
         password: _passwordController.text,
       );
 
@@ -154,22 +154,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 20),
-                      CustomTextField(
-                        label: 'Username',
-                        hint: 'Choose a username',
-                        controller: _usernameController,
-                        prefixIcon: Iconsax.user,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter a username';
-                          }
-                          if (value.length < 3) {
-                            return 'Username must be at least 3 characters';
-                          }
-                          return null;
-                        },
-                      ),
+                      // ❌ REMOVED: Username field (lines 20-35 of original)
                       const SizedBox(height: 20),
                       CustomTextField(
                         label: 'Password',

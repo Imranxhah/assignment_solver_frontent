@@ -60,10 +60,33 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  // Register
+  // ✅ Parse error messages from backend response
+  String _parseErrorMessage(Map<String, dynamic> result) {
+    final message = result['message'];
+
+    // Check if there are field-specific errors
+    if (result.containsKey('errors') && result['errors'] is Map) {
+      final errors = result['errors'] as Map<String, dynamic>;
+
+      // ✅ UPDATED: Priority: email > password > other (removed username)
+      if (errors.containsKey('email')) {
+        return errors['email'].toString();
+      } else if (errors.containsKey('password')) {
+        return errors['password'].toString();
+      } else {
+        // Return first error found
+        return errors.values.first.toString();
+      }
+    }
+
+    // Return general message or default
+    return message ?? 'Registration failed. Please try again.';
+  }
+
+  // ✅ UPDATED: Register without username
   Future<bool> register({
     required String email,
-    required String username,
+    // ❌ REMOVED: required String username,
     required String password,
   }) async {
     _isLoading = true;
@@ -73,7 +96,7 @@ class AuthProvider with ChangeNotifier {
     try {
       final result = await AuthService.register(
         email: email,
-        username: username,
+        // ❌ REMOVED: username: username,
         password: password,
       );
 
@@ -81,7 +104,8 @@ class AuthProvider with ChangeNotifier {
       if (result['success']) {
         _errorMessage = null;
       } else {
-        _errorMessage = result['message'];
+        // ✅ Use error parser
+        _errorMessage = _parseErrorMessage(result);
       }
       notifyListeners();
       return result['success'];

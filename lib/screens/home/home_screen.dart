@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'dart:convert';
 import '../../providers/auth_provider.dart';
 import '../../providers/assignment_provider.dart';
 import '../../utils/app_theme.dart';
@@ -35,7 +34,8 @@ class _HomeScreenState extends State<HomeScreen> {
       final response = await ApiService.checkVersion(currentVersion);
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+        // ✅ FIX: Use response.data instead of jsonDecode(response.body)
+        final data = response.data;
 
         if (data['force_update'] == true && mounted) {
           _showForceUpdateDialog(

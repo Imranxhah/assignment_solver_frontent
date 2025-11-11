@@ -1,10 +1,40 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 
 class ErrorHandler {
   /// Convert technical errors into user-friendly messages
   static String getErrorMessage(dynamic error) {
+    // Handle Dio-specific errors
+    if (error is DioException) {
+      switch (error.type) {
+        case DioExceptionType.connectionTimeout:
+        case DioExceptionType.sendTimeout:
+        case DioExceptionType.receiveTimeout:
+          return 'Request timed out. Please check your connection and try again.';
+
+        case DioExceptionType.connectionError:
+          return 'No internet connection. Please check your network and try again.';
+
+        case DioExceptionType.badResponse:
+          if (error.response != null) {
+            return parseApiError(error.response!);
+          }
+          return 'Server error. Please try again later.';
+
+        case DioExceptionType.cancel:
+          return 'Request cancelled.';
+
+        case DioExceptionType.badCertificate:
+          return 'Connection security error. Please try again.';
+
+        case DioExceptionType.unknown:
+        default:
+          return 'Network error. Please try again.';
+      }
+    }
+
     if (error is SocketException) {
       return 'No internet connection. Please check your network and try again.';
     }
@@ -30,8 +60,8 @@ class ErrorHandler {
     return 'Something went wrong. Please try again.';
   }
 
-  /// Parse HTTP response errors
-  static String parseApiError(http.Response response) {
+  /// Parse Dio Response errors
+  static String parseApiError(Response response) {
     try {
       final statusCode = response.statusCode;
 
@@ -52,7 +82,7 @@ class ErrorHandler {
         case 503:
           return 'Service temporarily unavailable. Please try again in a few minutes.';
         default:
-          if (statusCode >= 500) {
+          if (statusCode != null && statusCode >= 500) {
             return 'Server error. Please try again later.';
           }
           return 'An error occurred. Please try again.';
@@ -227,6 +257,7 @@ class ErrorHandler {
   }
 }
 
+// ✅ Keep your custom TimeoutException
 class TimeoutException implements Exception {
   final String message;
   TimeoutException([this.message = 'Operation timed out']);

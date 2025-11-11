@@ -1,5 +1,4 @@
-import 'dart:convert';
-//import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import '../utils/constants.dart';
 import '../utils/error_handler.dart';
 import '../models/user_model.dart';
@@ -7,18 +6,18 @@ import 'api_service.dart';
 import 'storage_service.dart';
 
 class AuthService {
-  // Register new user
+  // ✅ UPDATED: Register without username
   static Future<Map<String, dynamic>> register({
     required String email,
-    required String username,
+    // ❌ REMOVED: required String username,
     required String password,
   }) async {
     try {
-      final response = await ApiService.post(
+      final Response response = await ApiService.post(
         AppConstants.registerUrl,
         {
           'email': email,
-          'username': username,
+          // ❌ REMOVED: 'username': username,
           'password': password,
           're_password': password,
         },
@@ -31,6 +30,24 @@ class AuthService {
           'message':
               'Registration successful! Please verify your email to continue.',
         };
+      } else if (response.statusCode == 400) {
+        // ✅ Parse backend validation errors
+        final data = response.data;
+
+        // Check if response has field-specific errors
+        if (data is Map && data.containsKey('errors')) {
+          return {
+            'success': false,
+            'message': data['message'] ?? 'Validation failed',
+            'errors': data['errors'], // ✅ Pass field-specific errors
+          };
+        } else {
+          // Fallback: Use ApiService.handleError for generic errors
+          return {
+            'success': false,
+            'message': ApiService.handleError(response),
+          };
+        }
       } else {
         return {
           'success': false,
@@ -51,7 +68,7 @@ class AuthService {
     required String token,
   }) async {
     try {
-      final response = await ApiService.post(
+      final Response response = await ApiService.post(
         '${AppConstants.activateUrl}$uid/$token/',
         {},
         requiresAuth: false,
@@ -82,7 +99,7 @@ class AuthService {
     required String password,
   }) async {
     try {
-      final response = await ApiService.post(
+      final Response response = await ApiService.post(
         AppConstants.loginUrl,
         {
           'email': email,
@@ -92,8 +109,11 @@ class AuthService {
       );
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        await StorageService.saveTokens(data['access'], data['refresh']);
+        // ✅ response.data is already parsed (no jsonDecode needed)
+        await StorageService.saveTokens(
+          response.data['access'],
+          response.data['refresh'],
+        );
         return {
           'success': true,
           'message': 'Login successful',
@@ -115,14 +135,14 @@ class AuthService {
   // Get user info
   static Future<Map<String, dynamic>> getUserInfo() async {
     try {
-      final response = await ApiService.get(
+      final Response response = await ApiService.get(
         AppConstants.userInfoUrl,
         requiresAuth: true,
       );
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final user = User.fromJson(data);
+        // ✅ response.data is already parsed (no jsonDecode needed)
+        final user = User.fromJson(response.data);
         await StorageService.saveUser(user);
         return {
           'success': true,
@@ -160,7 +180,7 @@ class AuthService {
     required String departmentName,
   }) async {
     try {
-      final response = await ApiService.patch(
+      final Response response = await ApiService.patch(
         AppConstants.completeProfileUrl,
         {
           'full_name': fullName,
@@ -198,7 +218,7 @@ class AuthService {
     required String departmentName,
   }) async {
     try {
-      final response = await ApiService.patch(
+      final Response response = await ApiService.patch(
         AppConstants.updateProfileUrl,
         {
           'full_name': fullName,
