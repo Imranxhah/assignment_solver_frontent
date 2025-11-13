@@ -30,13 +30,10 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final packageInfo = await PackageInfo.fromPlatform();
       final currentVersion = packageInfo.version;
-
       final response = await ApiService.checkVersion(currentVersion);
 
       if (response.statusCode == 200) {
-        // ✅ FIX: Use response.data instead of jsonDecode(response.body)
         final data = response.data;
-
         if (data['force_update'] == true && mounted) {
           _showForceUpdateDialog(
             message: data['message'] ?? 'Please update to continue',
@@ -133,161 +130,167 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Welcome Section
-                Text(
-                  'Welcome back,',
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    color: theme.textTheme.bodySmall?.color,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  user?.profile?.fullName ?? user?.username ?? 'Student',
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                if (user?.profile?.universityName != null) ...[
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(
-                        Iconsax.building,
-                        size: 16,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Welcome back,',
+                      style: theme.textTheme.bodyLarge?.copyWith(
                         color: theme.textTheme.bodySmall?.color,
                       ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          user!.profile!.universityName,
-                          style: theme.textTheme.bodyMedium,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      user?.profile?.fullName ?? user?.username ?? 'Student',
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (user?.profile?.universityName != null) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(
+                            Iconsax.building,
+                            size: 16,
+                            color: theme.textTheme.bodySmall?.color,
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              user!.profile!.universityName,
+                              style: theme.textTheme.bodyMedium,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
-                  ),
-                ],
-
+                  ],
+                ),
                 const SizedBox(height: 32),
 
-                // Main Upload Card - Primary Focus
+                // Main Upload Card
                 Consumer<AssignmentProvider>(
                   builder: (context, assignmentProvider, child) {
                     final remaining =
                         assignmentProvider.submissionLimit?.remaining ?? 3;
                     final canSubmit = remaining > 0;
 
-                    return Card(
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        side: BorderSide(
-                          color: canSubmit
-                              ? AppTheme.primaryColor.withOpacity(0.2)
-                              : theme.dividerColor,
-                          width: 1,
+                    return SizedBox(
+                      width: double.infinity,
+                      child: Card(
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          side: BorderSide(
+                            color: canSubmit
+                                ? AppTheme.primaryColor.withOpacity(0.2)
+                                : theme.dividerColor,
+                            width: 1,
+                          ),
                         ),
-                      ),
-                      child: InkWell(
-                        onTap: canSubmit
-                            ? () {
-                                Navigator.pushNamed(
-                                    context, '/assignment-submission');
-                              }
-                            : null,
-                        borderRadius: BorderRadius.circular(20),
-                        child: Padding(
-                          padding: const EdgeInsets.all(32),
-                          child: Column(
-                            children: [
-                              // Icon
-                              Container(
-                                padding: const EdgeInsets.all(20),
-                                decoration: BoxDecoration(
-                                  color: canSubmit
-                                      ? AppTheme.primaryColor.withOpacity(0.1)
-                                      : theme.disabledColor.withOpacity(0.1),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  Iconsax.document_upload,
-                                  size: 48,
-                                  color: canSubmit
-                                      ? AppTheme.primaryColor
-                                      : theme.disabledColor,
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-
-                              // Title
-                              Text(
-                                canSubmit
-                                    ? 'Upload Your Assignment'
-                                    : 'Daily Limit Reached',
-                                style: theme.textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 8),
-
-                              // Description
-                              Text(
-                                canSubmit
-                                    ? 'Get AI-powered solutions instantly'
-                                    : 'Come back tomorrow for more submissions',
-                                style: theme.textTheme.bodyMedium,
-                                textAlign: TextAlign.center,
-                              ),
-
-                              if (canSubmit) ...[
-                                const SizedBox(height: 24),
-                                // Supported formats badge
+                        child: InkWell(
+                          onTap: canSubmit
+                              ? () {
+                                  Navigator.pushNamed(
+                                      context, '/assignment-submission');
+                                }
+                              : null,
+                          borderRadius: BorderRadius.circular(20),
+                          child: Padding(
+                            padding: const EdgeInsets.all(32),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                // Icon
                                 Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 10,
-                                  ),
+                                  padding: const EdgeInsets.all(20),
                                   decoration: BoxDecoration(
-                                    color:
-                                        AppTheme.primaryColor.withOpacity(0.08),
-                                    borderRadius: BorderRadius.circular(12),
+                                    color: canSubmit
+                                        ? AppTheme.primaryColor.withOpacity(0.1)
+                                        : theme.disabledColor.withOpacity(0.1),
+                                    shape: BoxShape.circle,
                                   ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Iconsax.document,
-                                        size: 16,
-                                        color: AppTheme.primaryColor,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'PDF • DOCX • PPTX',
-                                        style:
-                                            theme.textTheme.bodySmall?.copyWith(
-                                          color: AppTheme.primaryColor,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ],
+                                  child: Icon(
+                                    Iconsax.document_upload,
+                                    size: 48,
+                                    color: canSubmit
+                                        ? AppTheme.primaryColor
+                                        : theme.disabledColor,
                                   ),
                                 ),
+                                const SizedBox(height: 20),
+                                // Title
+                                Text(
+                                  canSubmit
+                                      ? 'Upload Your Assignment'
+                                      : 'Daily Limit Reached',
+                                  style:
+                                      theme.textTheme.headlineSmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 8),
+                                // Description
+                                Text(
+                                  canSubmit
+                                      ? 'Get AI-powered solutions instantly'
+                                      : 'Come back tomorrow for more submissions',
+                                  style: theme.textTheme.bodyMedium,
+                                  textAlign: TextAlign.center,
+                                ),
+                                if (canSubmit) ...[
+                                  const SizedBox(height: 24),
+                                  // Supported formats badge
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 10,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.primaryColor
+                                          .withOpacity(0.08),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Iconsax.document,
+                                          size: 16,
+                                          color: AppTheme.primaryColor,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'PDF • DOCX • PPTX',
+                                          style: theme.textTheme.bodySmall
+                                              ?.copyWith(
+                                            color: AppTheme.primaryColor,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ],
-                            ],
+                            ),
                           ),
                         ),
                       ),
                     );
                   },
                 ),
-
                 const SizedBox(height: 24),
 
-                // Submission Stats - Compact Version
+                // Submission Stats
                 Consumer<AssignmentProvider>(
                   builder: (context, assignmentProvider, child) {
                     final limit = assignmentProvider.submissionLimit;
@@ -315,7 +318,6 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             const SizedBox(width: 16),
-
                             // Text info
                             Expanded(
                               child: Column(
@@ -335,7 +337,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ],
                               ),
                             ),
-
                             // Large number
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
@@ -360,7 +361,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                   },
                 ),
-
                 const SizedBox(height: 24),
 
                 // Quick Guide Section

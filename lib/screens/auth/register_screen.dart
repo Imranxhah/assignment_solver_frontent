@@ -18,48 +18,33 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
-  // ❌ REMOVED: final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
   @override
   void dispose() {
     _emailController.dispose();
-    // ❌ REMOVED: _usernameController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  // Send verification code after successful registration
+  // ✅ FIXED: Navigate immediately, send verification in background
   Future<void> _sendVerificationCode(String email) async {
+    // Navigate immediately without waiting
+    if (!mounted) return;
+    Navigator.pushReplacementNamed(
+      context,
+      '/otp-verification',
+      arguments: email,
+    );
+
+    // Send verification code in background
     try {
-      final response = await ApiService.sendVerificationCode(email);
-
-      if (!mounted) return;
-
-      if (response.statusCode == 200) {
-        // Navigate to OTP verification screen
-        Navigator.pushReplacementNamed(
-          context,
-          '/otp-verification',
-          arguments: email,
-        );
-      } else {
-        final errorMessage = ApiService.handleError(response);
-        ErrorHandler.showErrorSnackBar(
-          context,
-          message: errorMessage,
-          onRetry: () => _sendVerificationCode(email),
-        );
-      }
+      await ApiService.sendVerificationCode(email);
     } catch (e) {
-      if (!mounted) return;
-      ErrorHandler.showErrorSnackBar(
-        context,
-        message: ErrorHandler.getErrorMessage(e),
-        onRetry: () => _sendVerificationCode(email),
-      );
+      // Handle silently or show error on OTP screen
+      debugPrint('Verification code error: $e');
     }
   }
 
@@ -67,8 +52,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (_formKey.currentState!.validate()) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final email = _emailController.text.trim();
-
-      // ✅ UPDATED: Removed username parameter
       final success = await authProvider.register(
         email: email,
         password: _passwordController.text,
@@ -77,13 +60,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (!mounted) return;
 
       if (success) {
-        ErrorHandler.showSuccessSnackBar(
-          context,
-          message: 'Registration successful! Sending verification code...',
-          duration: const Duration(seconds: 2),
-        );
-
-        // Send verification code to email
+        // Navigate immediately without showing success message
         await _sendVerificationCode(email);
       } else {
         ErrorHandler.showErrorSnackBar(
@@ -98,132 +75,149 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
+      backgroundColor: colorScheme.surface,
       body: Consumer<AuthProvider>(
         builder: (context, authProvider, child) {
           return LoadingOverlay(
             isLoading: authProvider.isLoading,
-            message: 'Creating account...',
+            message: 'Creating your account...',
             child: SafeArea(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 40),
-                      Center(
-                        child: Icon(
-                          Icons.school_rounded,
-                          size: 80,
-                          color: Theme.of(context).primaryColor,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        'Create Account',
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineMedium
-                            ?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Register to start solving assignments',
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: Colors.grey[600],
-                            ),
-                      ),
-                      const SizedBox(height: 40),
-                      CustomTextField(
-                        label: 'Email',
-                        hint: 'Enter your email',
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        prefixIcon: Iconsax.sms,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter your email';
-                          }
-                          if (!value.contains('@')) {
-                            return 'Please enter a valid email';
-                          }
-                          return null;
-                        },
-                      ),
-                      // ❌ REMOVED: Username field (lines 20-35 of original)
-                      const SizedBox(height: 20),
-                      CustomTextField(
-                        label: 'Password',
-                        hint: 'Create a password',
-                        controller: _passwordController,
-                        obscureText: true,
-                        prefixIcon: Iconsax.lock,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter a password';
-                          }
-                          if (value.length < 6) {
-                            return 'Password must be at least 6 characters';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                      CustomTextField(
-                        label: 'Confirm Password',
-                        hint: 'Re-enter your password',
-                        controller: _confirmPasswordController,
-                        obscureText: true,
-                        prefixIcon: Iconsax.lock,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please confirm your password';
-                          }
-                          if (value != _passwordController.text) {
-                            return 'Passwords do not match';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 32),
-                      SizedBox(
-                        width: double.infinity,
-                        child: CustomButton(
-                          text: 'Register',
-                          onPressed: _handleRegister,
-                          icon: Iconsax.user_add,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+              child: Center(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 32,
+                    ),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
-                            'Already have an account? ',
-                            style: Theme.of(context).textTheme.bodyMedium,
+                          // ✅ Clean Modern Header Section
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Create Account',
+                                style: theme.textTheme.headlineLarge?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 32,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                'Sign up to start solving assignments with AI',
+                                style: theme.textTheme.bodyLarge?.copyWith(
+                                  color: theme.textTheme.bodySmall?.color,
+                                  fontSize: 15,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ],
                           ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pushReplacementNamed(context, '/login');
+                          const SizedBox(height: 40),
+
+                          // ✅ Form Fields with Better Spacing
+                          CustomTextField(
+                            label: 'Email Address',
+                            hint: 'Enter your email',
+                            controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
+                            prefixIcon: Iconsax.sms,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter your email';
+                              }
+                              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                                  .hasMatch(value)) {
+                                return 'Please enter a valid email';
+                              }
+                              return null;
                             },
-                            child: Text(
-                              'Login',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                    color: Theme.of(context).primaryColor,
+                          ),
+                          const SizedBox(height: 20),
+
+                          CustomTextField(
+                            label: 'Password',
+                            hint: 'Create a secure password',
+                            controller: _passwordController,
+                            obscureText: true,
+                            prefixIcon: Iconsax.lock_1,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter a password';
+                              }
+                              if (value.length < 6) {
+                                return 'Password must be at least 6 characters';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 20),
+
+                          CustomTextField(
+                            label: 'Confirm Password',
+                            hint: 'Re-enter your password',
+                            controller: _confirmPasswordController,
+                            obscureText: true,
+                            prefixIcon: Iconsax.lock_1,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please confirm your password';
+                              }
+                              if (value != _passwordController.text) {
+                                return 'Passwords do not match';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 32),
+
+                          // ✅ Register Button
+                          SizedBox(
+                            width: double.infinity,
+                            height: 56,
+                            child: CustomButton(
+                              text: 'Create Account',
+                              onPressed: _handleRegister,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+
+                          // ✅ Simple Login Link
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Already have an account? ',
+                                style: theme.textTheme.bodyMedium,
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pushReplacementNamed(
+                                      context, '/login');
+                                },
+                                child: Text(
+                                  'Login',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: colorScheme.primary,
                                     fontWeight: FontWeight.bold,
                                   ),
-                            ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),

@@ -149,16 +149,23 @@ class ApiService {
   }
 
   // ✅ Multipart Request with OPTIONAL file upload
+  // ✅ FIXED: Multipart Request with OPTIONAL file upload
   static Future<Response> multipartPost(
     String endpoint,
-    Map<String, String> fields,
+    Map<String, dynamic> fields,
     String? filePath, // Optional file
     String fileFieldName,
   ) async {
     try {
       final token = await StorageService.getAccessToken();
+
+      // ✅ Create headers for THIS request only
+      Map<String, String> headers = {};
       if (token != null) {
-        _dio.options.headers['Authorization'] = 'Bearer $token';
+        headers['Authorization'] = 'Bearer $token';
+        print('🔑 Token found: ${token.substring(0, 20)}...'); // ✅ DEBUG
+      } else {
+        print('❌ NO TOKEN FOUND!'); // ✅ DEBUG
       }
 
       // Build FormData
@@ -167,23 +174,31 @@ class ApiService {
       // Add all fields
       fields.forEach((key, value) {
         formDataMap[key] = value;
+        print('📤 Field: $key = $value'); // ✅ DEBUG
       });
 
       // Add file only if provided
       if (filePath != null && filePath.isNotEmpty) {
         formDataMap[fileFieldName] = await MultipartFile.fromFile(filePath);
+        print('📁 File added: $filePath'); // ✅ DEBUG
       }
 
       FormData formData = FormData.fromMap(formDataMap);
 
-      var response = await _dio.post(endpoint, data: formData);
+      // ✅ Send with headers
+      var response = await _dio.post(
+        endpoint,
+        data: formData,
+        options: Options(headers: headers), // ✅ FIXED: Pass headers per request
+      );
 
       // If unauthorized, try refreshing token and retry
       if (response.statusCode == 401) {
+        print('🔄 Token expired, refreshing...'); // ✅ DEBUG
         final refreshed = await refreshToken();
         if (refreshed) {
           final newToken = await StorageService.getAccessToken();
-          _dio.options.headers['Authorization'] = 'Bearer $newToken';
+          headers['Authorization'] = 'Bearer $newToken';
 
           // Rebuild FormData
           formDataMap = {};
@@ -193,14 +208,20 @@ class ApiService {
           if (filePath != null && filePath.isNotEmpty) {
             formDataMap[fileFieldName] = await MultipartFile.fromFile(filePath);
           }
-          formData = FormData.fromMap(formDataMap);
 
-          response = await _dio.post(endpoint, data: formData);
+          formData = FormData.fromMap(formDataMap);
+          response = await _dio.post(
+            endpoint,
+            data: formData,
+            options: Options(headers: headers), // ✅ FIXED
+          );
         }
       }
 
       return response;
     } on DioException catch (e) {
+      print('❌ DioException: ${e.message}'); // ✅ DEBUG
+      print('❌ Response: ${e.response?.data}'); // ✅ DEBUG
       throw _handleDioError(e);
     }
   }

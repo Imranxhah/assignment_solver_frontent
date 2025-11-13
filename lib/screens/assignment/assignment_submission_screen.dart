@@ -21,7 +21,6 @@ class _AssignmentSubmissionScreenState extends State<AssignmentSubmissionScreen>
   final _assignmentNumberController = TextEditingController();
   final _tutorController = TextEditingController();
   final _textController = TextEditingController();
-
   String? _filePath;
   int _wordCount = 0;
   late TabController _tabController;
@@ -213,7 +212,6 @@ class _AssignmentSubmissionScreenState extends State<AssignmentSubmissionScreen>
                   ],
                 ),
               ),
-
               const SizedBox(height: 20),
 
               // ✅ FIXED: Smooth height animation without overflow
@@ -227,7 +225,7 @@ class _AssignmentSubmissionScreenState extends State<AssignmentSubmissionScreen>
                   controller: _tabController,
                   physics: const NeverScrollableScrollPhysics(),
                   children: [
-                    // File Upload Tab - Now uses LayoutBuilder internally
+                    // File Upload Tab
                     FilePickerWidget(
                       onFilePicked: (path) {
                         setState(() {
@@ -316,7 +314,6 @@ class _AssignmentSubmissionScreenState extends State<AssignmentSubmissionScreen>
                   ],
                 ),
               ),
-
               const SizedBox(height: 24),
 
               // Form Fields Section
@@ -409,10 +406,9 @@ class _AssignmentSubmissionScreenState extends State<AssignmentSubmissionScreen>
                   ],
                 ),
               ),
-
               const SizedBox(height: 24),
 
-              // Info Tip with Icon
+              // Info Tip
               Row(
                 children: [
                   Icon(
@@ -432,7 +428,6 @@ class _AssignmentSubmissionScreenState extends State<AssignmentSubmissionScreen>
                   ),
                 ],
               ),
-
               const SizedBox(height: 20),
 
               // Submit Button
@@ -444,7 +439,6 @@ class _AssignmentSubmissionScreenState extends State<AssignmentSubmissionScreen>
                   icon: Iconsax.cpu,
                 ),
               ),
-
               const SizedBox(height: 16),
             ],
           ),

@@ -11,7 +11,6 @@ class AssignmentService {
           await ApiService.get(AppConstants.checkLimitUrl);
 
       if (response.statusCode == 200) {
-        // ✅ response.data is already parsed JSON (no jsonDecode needed)
         final limit = SubmissionLimit.fromJson(response.data);
 
         return {
@@ -43,17 +42,13 @@ class AssignmentService {
         'tutor_name': submission.tutorName,
       };
 
-      // ✅ Add assignment text if provided (text mode)
-      if (submission.assignmentText != null &&
-          submission.assignmentText!.isNotEmpty) {
-        fields['assignment_text'] = submission.assignmentText!;
-      }
-
       Response response;
 
       // ✅ Check if file upload or text mode
       if (submission.filePath != null && submission.filePath!.isNotEmpty) {
-        // File upload mode
+        // ✅ FILE mode
+        fields['type'] = 'FILE'; // ✅ ADDED
+
         response = await ApiService.multipartPost(
           AppConstants.submitAssignmentUrl,
           fields,
@@ -61,16 +56,19 @@ class AssignmentService {
           'file',
         );
       } else {
-        // Text mode - use multipart POST without file
+        // ✅ TEXT mode
+        fields['type'] = 'TEXT'; // ✅ ADDED
+        fields['text_content'] =
+            submission.assignmentText ?? ''; // ✅ FIXED field name
+
         response = await ApiService.multipartPost(
           AppConstants.submitAssignmentUrl,
           fields,
-          null, // ✅ No file
+          null, // No file
           'file',
         );
       }
 
-      // ✅ Dio automatically parses JSON, no need for bytesToString or jsonDecode
       if (response.statusCode == 200) {
         final assignmentResponse = AssignmentResponse.fromJson(response.data);
 
