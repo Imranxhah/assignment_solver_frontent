@@ -87,8 +87,8 @@ class _AssignmentSubmissionScreenState extends State<AssignmentSubmissionScreen>
         _showError('Text exceeds maximum limit of 2000 words');
         return;
       }
-      if (_wordCount < 10) {
-        _showError('Please enter at least 10 words');
+      if (_wordCount < 3) {
+        _showError('Please enter at least 3 words');
         return;
       }
     }

@@ -1,9 +1,9 @@
 class AppConstants {
   // API Configuration
-  static const String baseUrl =
-      'https://solveit.pythonanywhere.com'; // Android emulator
+  //static const String baseUrl =
+  //'https://solveit.pythonanywhere.com'; // Android emulator
   //static const String baseUrl = 'http://localhost:8000'; // iOS simulator
-  //static const String baseUrl = 'http://10.0.2.2:8000'; // Physical device
+  static const String baseUrl = 'http://10.0.2.2:8000'; // Physical device
 
   // ============ Authentication Endpoints (Djoser) ============
   static const String registerUrl = '/auth/users/';

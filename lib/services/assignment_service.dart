@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'dart:async'; // ✅ ADDED - For TimeoutException
 import 'package:dio/dio.dart';
 import '../utils/constants.dart';
 import '../models/assignment_model.dart';
@@ -12,7 +14,6 @@ class AssignmentService {
 
       if (response.statusCode == 200) {
         final limit = SubmissionLimit.fromJson(response.data);
-
         return {
           'success': true,
           'limit': limit,
@@ -47,8 +48,7 @@ class AssignmentService {
       // ✅ Check if file upload or text mode
       if (submission.filePath != null && submission.filePath!.isNotEmpty) {
         // ✅ FILE mode
-        fields['type'] = 'FILE'; // ✅ ADDED
-
+        fields['type'] = 'FILE';
         response = await ApiService.multipartPost(
           AppConstants.submitAssignmentUrl,
           fields,
@@ -57,10 +57,8 @@ class AssignmentService {
         );
       } else {
         // ✅ TEXT mode
-        fields['type'] = 'TEXT'; // ✅ ADDED
-        fields['text_content'] =
-            submission.assignmentText ?? ''; // ✅ FIXED field name
-
+        fields['type'] = 'TEXT';
+        fields['text_content'] = submission.assignmentText ?? '';
         response = await ApiService.multipartPost(
           AppConstants.submitAssignmentUrl,
           fields,
@@ -71,7 +69,6 @@ class AssignmentService {
 
       if (response.statusCode == 200) {
         final assignmentResponse = AssignmentResponse.fromJson(response.data);
-
         return {
           'success': true,
           'response': assignmentResponse,
@@ -82,10 +79,24 @@ class AssignmentService {
           'message': response.data['message'] ?? 'Failed to submit assignment.',
         };
       }
-    } catch (e) {
+    } on TimeoutException {
       return {
         'success': false,
-        'message': 'Network error. Please try again.',
+        'message':
+            'Request timed out. Please check your connection and try again.',
+      };
+    } on SocketException {
+      return {
+        'success': false,
+        'message': 'No internet connection. Please check your network.',
+      };
+    } catch (e) {
+      print('🔴 ERROR TYPE: ${e.runtimeType}');
+      print('🔴 ERROR DETAILS: $e');
+
+      return {
+        'success': false,
+        'message': 'Network error: ${e.toString()}', // Show actual error
       };
     }
   }

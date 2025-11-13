@@ -9,9 +9,9 @@ class ApiService {
   static final Dio _dio = Dio(
     BaseOptions(
       baseUrl: AppConstants.baseUrl,
-      connectTimeout: const Duration(seconds: 130),
-      receiveTimeout: const Duration(seconds: 130),
-      sendTimeout: const Duration(seconds: 60),
+      connectTimeout: const Duration(seconds: 30),
+      receiveTimeout: const Duration(seconds: 180),
+      sendTimeout: const Duration(seconds: 180),
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -19,32 +19,80 @@ class ApiService {
     ),
   );
 
-  // Refresh access token using refresh token
+  // ✅ Token cache to avoid redundant refresh calls
+  static String? _cachedToken;
+  static DateTime? _tokenExpiry;
+
+  // ✅ Smart token getter with automatic refresh
+  static Future<String?> _getValidToken() async {
+    // Check if cached token is still valid
+    if (_cachedToken != null && _tokenExpiry != null) {
+      if (DateTime.now().isBefore(_tokenExpiry!)) {
+        return _cachedToken; // Use cached token
+      }
+    }
+
+    // Cache expired or missing, get fresh token
+    final token = await StorageService.getAccessToken();
+
+    if (token != null) {
+      // Cache the token for 50 minutes (JWT default is 60 min)
+      _cachedToken = token;
+      _tokenExpiry = DateTime.now().add(const Duration(minutes: 50));
+      return token;
+    }
+
+    // No access token, try refresh
+    final refreshSuccess = await refreshToken();
+    if (refreshSuccess) {
+      return await StorageService.getAccessToken();
+    }
+
+    return null;
+  }
+
+  // ✅ Enhanced refresh token method with caching
   static Future<bool> refreshToken() async {
     try {
+      print('🔄 Refreshing access token...');
+
       final refreshToken = await StorageService.getRefreshToken();
-      if (refreshToken == null) return false;
+      if (refreshToken == null) {
+        print('❌ No refresh token available');
+        return false;
+      }
 
       final response = await _dio.post(
         AppConstants.refreshUrl,
         data: {'refresh': refreshToken},
+        options: Options(
+          headers: {}, // No auth needed for refresh
+        ),
       );
 
       if (response.statusCode == 200) {
-        await StorageService.saveTokens(
-          response.data['access'],
-          refreshToken,
-        );
+        final newAccessToken = response.data['access'];
+
+        // Save new token
+        await StorageService.saveTokens(newAccessToken, refreshToken);
+
+        // Cache token with 50-minute expiry
+        _cachedToken = newAccessToken;
+        _tokenExpiry = DateTime.now().add(const Duration(minutes: 50));
+
+        print('✅ Token refreshed successfully');
         return true;
       }
 
+      print('❌ Token refresh failed: ${response.statusCode}');
       return false;
     } catch (e) {
+      print('❌ Token refresh error: $e');
       return false;
     }
   }
 
-  // GET Request with auto token refresh and better error handling
+  // ✅ GET Request with auto token refresh
   static Future<Response> get(
     String endpoint, {
     bool requiresAuth = true,
@@ -52,7 +100,7 @@ class ApiService {
     try {
       // Set authorization header if needed
       if (requiresAuth) {
-        final token = await StorageService.getAccessToken();
+        final token = await _getValidToken();
         if (token != null) {
           _dio.options.headers['Authorization'] = 'Bearer $token';
         }
@@ -64,21 +112,28 @@ class ApiService {
 
       // If unauthorized, try refreshing token
       if (response.statusCode == 401 && requiresAuth) {
+        print('⚠️ 401 Unauthorized - Attempting token refresh...');
+
+        // Clear cache
+        _cachedToken = null;
+        _tokenExpiry = null;
+
         final refreshed = await refreshToken();
         if (refreshed) {
-          final newToken = await StorageService.getAccessToken();
+          final newToken = await _getValidToken();
           _dio.options.headers['Authorization'] = 'Bearer $newToken';
           response = await _dio.get(endpoint);
+        } else {
+          throw Exception('Session expired. Please login again.');
         }
       }
-
       return response;
     } on DioException catch (e) {
       throw _handleDioError(e);
     }
   }
 
-  // POST Request with auto token refresh and better error handling
+  // ✅ POST Request with auto token refresh
   static Future<Response> post(
     String endpoint,
     Map<String, dynamic> body, {
@@ -87,7 +142,7 @@ class ApiService {
     try {
       // Set authorization header if needed
       if (requiresAuth) {
-        final token = await StorageService.getAccessToken();
+        final token = await _getValidToken();
         if (token != null) {
           _dio.options.headers['Authorization'] = 'Bearer $token';
         }
@@ -99,21 +154,28 @@ class ApiService {
 
       // If unauthorized, try refreshing token
       if (response.statusCode == 401 && requiresAuth) {
+        print('⚠️ 401 Unauthorized - Attempting token refresh...');
+
+        // Clear cache
+        _cachedToken = null;
+        _tokenExpiry = null;
+
         final refreshed = await refreshToken();
         if (refreshed) {
-          final newToken = await StorageService.getAccessToken();
+          final newToken = await _getValidToken();
           _dio.options.headers['Authorization'] = 'Bearer $newToken';
           response = await _dio.post(endpoint, data: body);
+        } else {
+          throw Exception('Session expired. Please login again.');
         }
       }
-
       return response;
     } on DioException catch (e) {
       throw _handleDioError(e);
     }
   }
 
-  // PATCH Request with auto token refresh and better error handling
+  // ✅ PATCH Request with auto token refresh
   static Future<Response> patch(
     String endpoint,
     Map<String, dynamic> body, {
@@ -122,7 +184,7 @@ class ApiService {
     try {
       // Set authorization header if needed
       if (requiresAuth) {
-        final token = await StorageService.getAccessToken();
+        final token = await _getValidToken();
         if (token != null) {
           _dio.options.headers['Authorization'] = 'Bearer $token';
         }
@@ -134,38 +196,39 @@ class ApiService {
 
       // If unauthorized, try refreshing token
       if (response.statusCode == 401 && requiresAuth) {
+        print('⚠️ 401 Unauthorized - Attempting token refresh...');
+
+        // Clear cache
+        _cachedToken = null;
+        _tokenExpiry = null;
+
         final refreshed = await refreshToken();
         if (refreshed) {
-          final newToken = await StorageService.getAccessToken();
+          final newToken = await _getValidToken();
           _dio.options.headers['Authorization'] = 'Bearer $newToken';
           response = await _dio.patch(endpoint, data: body);
+        } else {
+          throw Exception('Session expired. Please login again.');
         }
       }
-
       return response;
     } on DioException catch (e) {
       throw _handleDioError(e);
     }
   }
 
-  // ✅ Multipart Request with OPTIONAL file upload
-  // ✅ FIXED: Multipart Request with OPTIONAL file upload
+  // ✅ Multipart POST with auto token refresh
   static Future<Response> multipartPost(
     String endpoint,
     Map<String, dynamic> fields,
-    String? filePath, // Optional file
+    String? filePath,
     String fileFieldName,
   ) async {
     try {
-      final token = await StorageService.getAccessToken();
-
-      // ✅ Create headers for THIS request only
-      Map<String, String> headers = {};
+      final token = await _getValidToken();
+      Map<String, dynamic> headers = {};
       if (token != null) {
         headers['Authorization'] = 'Bearer $token';
-        print('🔑 Token found: ${token.substring(0, 20)}...'); // ✅ DEBUG
-      } else {
-        print('❌ NO TOKEN FOUND!'); // ✅ DEBUG
       }
 
       // Build FormData
@@ -174,30 +237,36 @@ class ApiService {
       // Add all fields
       fields.forEach((key, value) {
         formDataMap[key] = value;
-        print('📤 Field: $key = $value'); // ✅ DEBUG
       });
 
       // Add file only if provided
       if (filePath != null && filePath.isNotEmpty) {
         formDataMap[fileFieldName] = await MultipartFile.fromFile(filePath);
-        print('📁 File added: $filePath'); // ✅ DEBUG
       }
 
       FormData formData = FormData.fromMap(formDataMap);
 
-      // ✅ Send with headers
       var response = await _dio.post(
         endpoint,
         data: formData,
-        options: Options(headers: headers), // ✅ FIXED: Pass headers per request
+        options: Options(
+          headers: headers,
+          sendTimeout: const Duration(seconds: 180),
+          receiveTimeout: const Duration(seconds: 180),
+        ),
       );
 
       // If unauthorized, try refreshing token and retry
       if (response.statusCode == 401) {
-        print('🔄 Token expired, refreshing...'); // ✅ DEBUG
+        print('⚠️ 401 Unauthorized - Attempting token refresh...');
+
+        // Clear cache
+        _cachedToken = null;
+        _tokenExpiry = null;
+
         final refreshed = await refreshToken();
         if (refreshed) {
-          final newToken = await StorageService.getAccessToken();
+          final newToken = await _getValidToken();
           headers['Authorization'] = 'Bearer $newToken';
 
           // Rebuild FormData
@@ -205,23 +274,28 @@ class ApiService {
           fields.forEach((key, value) {
             formDataMap[key] = value;
           });
+
           if (filePath != null && filePath.isNotEmpty) {
             formDataMap[fileFieldName] = await MultipartFile.fromFile(filePath);
           }
 
           formData = FormData.fromMap(formDataMap);
+
           response = await _dio.post(
             endpoint,
             data: formData,
-            options: Options(headers: headers), // ✅ FIXED
+            options: Options(
+              headers: headers,
+              sendTimeout: const Duration(seconds: 180),
+              receiveTimeout: const Duration(seconds: 180),
+            ),
           );
+        } else {
+          throw Exception('Session expired. Please login again.');
         }
       }
-
       return response;
     } on DioException catch (e) {
-      print('❌ DioException: ${e.message}'); // ✅ DEBUG
-      print('❌ Response: ${e.response?.data}'); // ✅ DEBUG
       throw _handleDioError(e);
     }
   }
@@ -244,7 +318,7 @@ class ApiService {
     );
   }
 
-  // Handle API Errors - Improved for Dio
+  // Handle API Errors
   static String handleError(Response response) {
     try {
       final error = response.data;
@@ -267,26 +341,22 @@ class ApiService {
     return ErrorHandler.parseApiError(response);
   }
 
-  // ✅ Handle Dio-specific errors
+  // ✅ Enhanced DioException handler
   static Exception _handleDioError(DioException e) {
     switch (e.type) {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
         return TimeoutException('Request timed out');
-
       case DioExceptionType.connectionError:
         return const SocketException('No internet connection');
-
       case DioExceptionType.badResponse:
         if (e.response != null) {
           return HttpException('Server error: ${e.response?.statusCode}');
         }
         return const HttpException('Could not connect to server');
-
       case DioExceptionType.cancel:
         return Exception('Request cancelled');
-
       default:
         return Exception(ErrorHandler.getErrorMessage(e.message));
     }
@@ -301,5 +371,11 @@ class ApiService {
     } on DioException catch (e) {
       throw _handleDioError(e);
     }
+  }
+
+  // ✅ Manual cache clear (call this on logout)
+  static void clearTokenCache() {
+    _cachedToken = null;
+    _tokenExpiry = null;
   }
 }

@@ -252,10 +252,12 @@ class AuthService {
   static Future<bool> logout() async {
     try {
       await StorageService.clearAll();
+      ApiService.clearTokenCache();
       return true;
     } catch (e) {
       // Still return true to allow user to proceed to login screen
       // even if local storage clearing fails
+      print(e);
       return true;
     }
   }
