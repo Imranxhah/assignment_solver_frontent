@@ -61,7 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryColor.withOpacity(0.1),
+                  color: AppTheme.primaryColor.withAlpha(26),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
@@ -189,7 +189,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           borderRadius: BorderRadius.circular(20),
                           side: BorderSide(
                             color: canSubmit
-                                ? AppTheme.primaryColor.withOpacity(0.2)
+                                ? AppTheme.primaryColor.withAlpha(51)
                                 : theme.dividerColor,
                             width: 1,
                           ),
@@ -213,8 +213,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                   padding: const EdgeInsets.all(20),
                                   decoration: BoxDecoration(
                                     color: canSubmit
-                                        ? AppTheme.primaryColor.withOpacity(0.1)
-                                        : theme.disabledColor.withOpacity(0.1),
+                                        ? AppTheme.primaryColor.withAlpha(26)
+                                        : theme.disabledColor.withAlpha(26),
                                     shape: BoxShape.circle,
                                   ),
                                   child: Icon(
@@ -256,7 +256,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                     decoration: BoxDecoration(
                                       color: AppTheme.primaryColor
-                                          .withOpacity(0.08),
+                                          .withAlpha(20),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Row(
@@ -308,7 +308,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: AppTheme.primaryColor.withOpacity(0.1),
+                                color: AppTheme.primaryColor.withAlpha(26),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Icon(
@@ -433,7 +433,7 @@ class _HomeScreenState extends State<HomeScreen> {
           width: 32,
           height: 32,
           decoration: BoxDecoration(
-            color: AppTheme.primaryColor.withOpacity(0.1),
+            color: AppTheme.primaryColor.withAlpha(26),
             shape: BoxShape.circle,
           ),
           child: Center(

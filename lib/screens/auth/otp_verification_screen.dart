@@ -1,6 +1,9 @@
+
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
-import '../../services/api_service.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../services/auth_service.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/loading_overlay.dart';
@@ -41,44 +44,29 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
       return;
     }
 
-    setState(() => _isLoading = true);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-    try {
-      final response = await ApiService.verifyCode(
-        widget.email,
-        _codeController.text,
+    final success = await authProvider.verifyEmail(
+      email: widget.email,
+      code: _codeController.text,
+    );
+
+    if (!mounted) return;
+
+    if (success) {
+      ErrorHandler.showSuccessSnackBar(
+        context,
+        message: 'Email verified successfully!',
       );
-
-      if (!mounted) return;
-
-      if (response.statusCode == 200) {
-        ErrorHandler.showSuccessSnackBar(
-          context,
-          message: 'Email verified successfully!',
-        );
-        Navigator.of(context).pushReplacementNamed('/login');
-      } else {
-        final errorMessage = ApiService.handleError(response);
-        setState(() => _errorMessage = errorMessage);
-        ErrorHandler.showErrorSnackBar(
-          context,
-          message: errorMessage,
-          onRetry: _verifyCode,
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      final errorMessage = ErrorHandler.getErrorMessage(e);
+      Navigator.of(context).pushReplacementNamed('/login');
+    } else {
+      final errorMessage = authProvider.errorMessage ?? 'Verification failed.';
       setState(() => _errorMessage = errorMessage);
       ErrorHandler.showErrorSnackBar(
         context,
         message: errorMessage,
         onRetry: _verifyCode,
       );
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
     }
   }
 
@@ -88,43 +76,29 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
       _errorMessage = '';
     });
 
-    try {
-      final response = await ApiService.sendVerificationCode(widget.email);
+    final result = await AuthService.sendVerificationEmail(widget.email);
 
-      if (!mounted) return;
+    if (!mounted) return;
 
-      if (response.statusCode == 200) {
-        ErrorHandler.showSuccessSnackBar(
-          context,
-          message: 'Code resent to ${widget.email}',
-        );
+    if (result['success']) {
+      ErrorHandler.showSuccessSnackBar(
+        context,
+        message: 'Code resent to ${widget.email}',
+      );
 
-        // Start countdown
-        setState(() => _resendCountdown = 60);
-        _startCountdown();
-      } else {
-        final errorMessage = ApiService.handleError(response);
-        setState(() => _errorMessage = errorMessage);
-        ErrorHandler.showErrorSnackBar(
-          context,
-          message: errorMessage,
-          onRetry: _resendCode,
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      final errorMessage = ErrorHandler.getErrorMessage(e);
+      // Start countdown
+      setState(() => _resendCountdown = 60);
+      _startCountdown();
+    } else {
+      final errorMessage = result['message'] ?? 'Failed to resend code.';
       setState(() => _errorMessage = errorMessage);
       ErrorHandler.showErrorSnackBar(
         context,
         message: errorMessage,
         onRetry: _resendCode,
       );
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
     }
+    setState(() => _isLoading = false);
   }
 
   void _startCountdown() async {

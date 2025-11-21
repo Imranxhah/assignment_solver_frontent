@@ -23,14 +23,14 @@ class LoadingOverlay extends StatelessWidget {
         child,
         if (isLoading)
           Container(
-            color: colorScheme.surface.withOpacity(0.85),
+            color: colorScheme.surface.withAlpha(217),
             child: Center(
               child: Container(
                 constraints: const BoxConstraints(maxWidth: 320),
                 margin: const EdgeInsets.symmetric(horizontal: 24),
                 child: Card(
                   elevation: 12,
-                  shadowColor: colorScheme.shadow.withOpacity(0.3),
+                  shadowColor: colorScheme.shadow.withAlpha(77),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                   ),
@@ -42,7 +42,7 @@ class LoadingOverlay extends StatelessWidget {
                         end: Alignment.bottomRight,
                         colors: [
                           colorScheme.surface,
-                          colorScheme.surface.withOpacity(0.95),
+                          colorScheme.surface.withAlpha(242),
                         ],
                       ),
                     ),
@@ -59,10 +59,10 @@ class LoadingOverlay extends StatelessWidget {
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: colorScheme.primary.withOpacity(0.1),
+                              color: colorScheme.primary.withAlpha(26),
                               boxShadow: [
                                 BoxShadow(
-                                  color: colorScheme.primary.withOpacity(0.2),
+                                  color: colorScheme.primary.withAlpha(51),
                                   blurRadius: 20,
                                   spreadRadius: 2,
                                 ),
@@ -92,9 +92,9 @@ class LoadingOverlay extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(4),
                                 child: LinearProgressIndicator(
                                   backgroundColor:
-                                      colorScheme.primary.withOpacity(0.1),
+                                      colorScheme.primary.withAlpha(26),
                                   valueColor: AlwaysStoppedAnimation<Color>(
-                                    colorScheme.primary.withOpacity(0.6),
+                                    colorScheme.primary.withAlpha(153),
                                   ),
                                 ),
                               ),

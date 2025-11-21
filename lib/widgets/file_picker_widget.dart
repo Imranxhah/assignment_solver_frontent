@@ -117,7 +117,7 @@ class _FilePickerWidgetState extends State<FilePickerWidget> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: colorScheme.shadow.withOpacity(0.06),
+              color: colorScheme.shadow.withAlpha(15),
               blurRadius: 15,
               offset: const Offset(0, 4),
             ),
@@ -139,7 +139,7 @@ class _FilePickerWidgetState extends State<FilePickerWidget> {
                       gradient: LinearGradient(
                         colors: [
                           _getFileColor(),
-                          _getFileColor().withOpacity(0.8),
+                          _getFileColor().withAlpha(204),
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
@@ -147,7 +147,7 @@ class _FilePickerWidgetState extends State<FilePickerWidget> {
                       borderRadius: BorderRadius.circular(14),
                       boxShadow: [
                         BoxShadow(
-                          color: _getFileColor().withOpacity(0.3),
+                          color: _getFileColor().withAlpha(77),
                           blurRadius: 8,
                           offset: const Offset(0, 4),
                         ),
@@ -183,7 +183,7 @@ class _FilePickerWidgetState extends State<FilePickerWidget> {
                                 vertical: 3,
                               ),
                               decoration: BoxDecoration(
-                                color: _getFileColor().withOpacity(0.1),
+                                color: _getFileColor().withAlpha(26),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
@@ -213,7 +213,7 @@ class _FilePickerWidgetState extends State<FilePickerWidget> {
                   const SizedBox(width: 8),
                   Container(
                     decoration: BoxDecoration(
-                      color: colorScheme.error.withOpacity(0.1),
+                      color: colorScheme.error.withAlpha(26),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: IconButton(
@@ -246,12 +246,12 @@ class _FilePickerWidgetState extends State<FilePickerWidget> {
               color: theme.cardColor,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: colorScheme.primary.withOpacity(0.3),
+                color: colorScheme.primary.withAlpha(77),
                 width: 2,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: colorScheme.primary.withOpacity(0.08),
+                  color: colorScheme.primary.withAlpha(20),
                   blurRadius: 15,
                   offset: const Offset(0, 4),
                 ),
@@ -270,8 +270,8 @@ class _FilePickerWidgetState extends State<FilePickerWidget> {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          colorScheme.primary.withOpacity(0.1),
-                          colorScheme.primary.withOpacity(0.05),
+                          colorScheme.primary.withAlpha(26),
+                          colorScheme.primary.withAlpha(13),
                         ],
                       ),
                       shape: BoxShape.circle,
@@ -311,10 +311,10 @@ class _FilePickerWidgetState extends State<FilePickerWidget> {
                           vertical: 5,
                         ),
                         decoration: BoxDecoration(
-                          color: colorScheme.primary.withOpacity(0.1),
+                          color: colorScheme.primary.withAlpha(26),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: colorScheme.primary.withOpacity(0.2),
+                            color: colorScheme.primary.withAlpha(51),
                           ),
                         ),
                         child: Text(

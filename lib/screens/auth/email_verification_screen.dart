@@ -1,8 +1,10 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../providers/auth_provider.dart';
-import '../../services/api_service.dart';
+import '../../services/auth_service.dart';
+import '../../utils/error_handler.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/loading_overlay.dart';
 
@@ -35,11 +37,11 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     });
 
     try {
-      final response = await ApiService.sendVerificationCode(userEmail);
+      final response = await AuthService.sendVerificationEmail(userEmail);
 
       if (!mounted) return;
 
-      if (response.statusCode == 200) {
+      if (response['success']) {
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -64,11 +66,18 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
           );
         }
       } else {
-        final errorMessage = ApiService.handleError(response);
+        // ✅ FIX: Use ErrorHandler.parseApiError instead of ApiService.handleError
+        final errorMessage = response['message'] ?? 'Failed to send code.';
         setState(() {
           _errorMessage = errorMessage;
         });
       }
+    } on DioException catch (e) {
+      // ✅ FIX: Handle DioException properly
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = ErrorHandler.getErrorMessage(e);
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -126,7 +135,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: theme.primaryColor.withOpacity(0.12),
+                    color: theme.primaryColor.withAlpha(31),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -163,10 +172,10 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                     vertical: 12,
                   ),
                   decoration: BoxDecoration(
-                    color: theme.primaryColor.withOpacity(0.08),
+                    color: theme.primaryColor.withAlpha(20),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: theme.primaryColor.withOpacity(0.2),
+                      color: theme.primaryColor.withAlpha(51),
                     ),
                   ),
                   child: Row(
@@ -208,10 +217,10 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.1),
+                      color: Colors.red.withAlpha(26),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: Colors.red.withOpacity(0.3),
+                        color: Colors.red.withAlpha(77),
                       ),
                     ),
                     child: Row(
@@ -240,7 +249,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                 Text(
                   'Check spam folder if you don\'t see it',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.textTheme.bodySmall?.color?.withOpacity(0.6),
+                    color: theme.textTheme.bodySmall?.color?.withAlpha(153),
                   ),
                 ),
               ],

@@ -1,0 +1,10 @@
+build/
+.dart_tool/
+ios/
+android/
+windows/
+linux/
+web/
+*.png
+*.jpg
+*.lock

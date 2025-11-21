@@ -1,7 +1,6 @@
-import 'dart:io';
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'dart:io';
 
 class ErrorHandler {
   /// Convert technical errors into user-friendly messages
@@ -13,24 +12,18 @@ class ErrorHandler {
         case DioExceptionType.sendTimeout:
         case DioExceptionType.receiveTimeout:
           return 'Request timed out. Please check your connection and try again.';
-
         case DioExceptionType.connectionError:
           return 'No internet connection. Please check your network and try again.';
-
         case DioExceptionType.badResponse:
           if (error.response != null) {
             return parseApiError(error.response!);
           }
           return 'Server error. Please try again later.';
-
         case DioExceptionType.cancel:
           return 'Request cancelled.';
-
         case DioExceptionType.badCertificate:
           return 'Connection security error. Please try again.';
-
         case DioExceptionType.unknown:
-        default:
           return 'Network error. Please try again.';
       }
     }
@@ -53,7 +46,7 @@ class ErrorHandler {
 
     // Handle string errors from API
     if (error is String) {
-      return _cleanErrorMessage(error);
+      return cleanErrorMessage(error);
     }
 
     // Fallback for unknown errors
@@ -64,15 +57,39 @@ class ErrorHandler {
   static String parseApiError(Response response) {
     try {
       final statusCode = response.statusCode;
+      String? detailMessage;
 
-      // Handle specific status codes
+      if (response.data is Map) {
+        final data = response.data as Map<String, dynamic>;
+
+        if (data.containsKey('detail')) {
+          detailMessage = data['detail'].toString();
+        } else if (data.containsKey('error')) {
+          detailMessage = data['error'].toString();
+        } else if (data.containsKey('message')) {
+          detailMessage = data['message'].toString();
+        } else if (data.isNotEmpty) {
+          // Handle field-specific errors like {'email': ['...']}
+          final firstValue = data.values.first;
+          if (firstValue is List && firstValue.isNotEmpty) {
+            detailMessage = firstValue.first.toString();
+          } else {
+            detailMessage = firstValue.toString();
+          }
+        }
+      }
+
+      if (statusCode == 401 && detailMessage != null && detailMessage.isNotEmpty) {
+        return detailMessage;
+      }
+
       switch (statusCode) {
         case 400:
-          return 'Invalid request. Please check your input and try again.';
+          return detailMessage ?? 'Invalid request. Please check your input and try again.';
         case 401:
-          return 'Session expired. Please login again.';
+          return detailMessage ?? 'Session expired. Please login again.';
         case 403:
-          return 'You don\'t have permission to perform this action.';
+          return detailMessage ?? 'You don\'t have permission to perform this action.';
         case 404:
           return 'The requested resource was not found.';
         case 429:
@@ -85,7 +102,7 @@ class ErrorHandler {
           if (statusCode != null && statusCode >= 500) {
             return 'Server error. Please try again later.';
           }
-          return 'An error occurred. Please try again.';
+          return detailMessage ?? 'An error occurred. Please try again.';
       }
     } catch (e) {
       return 'An unexpected error occurred. Please try again.';
@@ -93,11 +110,11 @@ class ErrorHandler {
   }
 
   /// Clean up technical error messages
-  static String _cleanErrorMessage(String message) {
+  static String cleanErrorMessage(String message) {
     // Remove common technical prefixes
     message = message.replaceAll('Exception: ', '');
     message = message.replaceAll('Error: ', '');
-    message = message.replaceAll('Network error:', '');
+    message = message.replaceAll('Network error: ', '');
 
     // Check for common patterns and return friendly messages
     if (message.toLowerCase().contains('socket')) {
@@ -115,7 +132,7 @@ class ErrorHandler {
 
     // If message is already user-friendly, return it
     if (message.length < 100 &&
-        !message.contains('(') &&
+        !message.contains('Exception') &&
         !message.contains('.dart')) {
       return message;
     }
@@ -199,6 +216,40 @@ class ErrorHandler {
     );
   }
 
+  /// Show info snackbar
+  static void showInfoSnackBar(
+    BuildContext context, {
+    required String message,
+    Duration duration = const Duration(seconds: 3),
+  }) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(
+              Icons.info_outline,
+              color: Colors.white,
+              size: 22,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(fontSize: 14),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.blue.shade700,
+        behavior: SnackBarBehavior.floating,
+        duration: duration,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+    );
+  }
+
   /// Show error dialog with more details
   static void showErrorDialog(
     BuildContext context, {
@@ -257,9 +308,10 @@ class ErrorHandler {
   }
 }
 
-// ✅ Keep your custom TimeoutException
+// Keep your custom TimeoutException class
 class TimeoutException implements Exception {
   final String message;
+
   TimeoutException([this.message = 'Operation timed out']);
 
   @override

@@ -5,21 +5,25 @@ class AppConstants {
   //static const String baseUrl = 'http://localhost:8000'; // iOS simulator
   static const String baseUrl = 'http://10.0.2.2:8000'; // Physical device
 
-  // ============ Authentication Endpoints (Djoser) ============
-  static const String registerUrl = '/auth/users/';
-  static const String activateUrl = '/auth/users/activation/';
-  static const String loginUrl = '/auth/jwt/create/';
+  // ============ Authentication Endpoints ============
+  static const String registerUrl = '/auth/register/';
+  static const String loginUrl = '/auth/login/';
+  static const String verifyEmailUrl = '/auth/verify-email/';
+  static const String sendVerificationEmailUrl = '/auth/send-verification-email/';
+  static const String forgotPasswordUrl = '/auth/forgot-password/';
+  static const String resetPasswordUrl = '/auth/reset-password/';
+  static const String changePasswordUrl = '/auth/change-password/';
   static const String refreshUrl = '/auth/jwt/refresh/';
-  static const String logoutUrl = '/auth/jwt/logout/';
-  static const String userInfoUrl = '/auth/users/me/';
+  static const String userInfoUrl = '/auth/user/';
+  static const String verifyPasswordResetCodeUrl = '/api/accounts/verify-password-reset-code/';
   static const String checkVersionUrl = '/api/accounts/check-version/';
 
+
   // ============ Profile Endpoints ============
-  static const String getProfileUrl = '/api/accounts/profile/';
-  static const String completeProfileUrl = '/api/accounts/profile/complete/';
-  static const String checkProfileCompletionUrl =
-      '/api/accounts/profile/check-completion/';
-  static const String updateProfileUrl = '/api/accounts/profile/update/';
+  static const String getProfileUrl = '/api/profile/';
+  static const String completeProfileUrl = '/auth/complete-profile/';
+  static const String checkProfileCompletionUrl = '/api/profile/check-completion/';
+  static const String updateProfileUrl = '/api/profile/update/';
 
   // ============ Submission/Assignment Endpoints ============
   static const String checkLimitUrl = '/api/submissions/check-limit/';

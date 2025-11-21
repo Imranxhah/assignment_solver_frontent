@@ -1,3 +1,4 @@
+import 'package:check_disposable_email/check_disposable_email.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:iconsax/iconsax.dart';
@@ -5,7 +6,6 @@ import '../../providers/auth_provider.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/loading_overlay.dart';
-import '../../services/api_service.dart';
 import '../../utils/error_handler.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -29,45 +29,39 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  // ✅ FIXED: Navigate immediately, send verification in background
-  Future<void> _sendVerificationCode(String email) async {
-    // Navigate immediately without waiting
-    if (!mounted) return;
-    Navigator.pushReplacementNamed(
-      context,
-      '/otp-verification',
-      arguments: email,
-    );
-
-    // Send verification code in background
-    try {
-      await ApiService.sendVerificationCode(email);
-    } catch (e) {
-      // Handle silently or show error on OTP screen
-      debugPrint('Verification code error: $e');
-    }
-  }
-
   Future<void> _handleRegister() async {
     if (_formKey.currentState!.validate()) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final email = _emailController.text.trim();
-      final success = await authProvider.register(
+
+      final result = await authProvider.register(
         email: email,
         password: _passwordController.text,
       );
 
       if (!mounted) return;
 
-      if (success) {
-        // Navigate immediately without showing success message
-        await _sendVerificationCode(email);
+      if (result['success'] == true) {
+        final message = result['message'] as String? ?? 'Please verify your email.';
+        
+        // If registration was successful and requires verification, show message and navigate
+        if (result['needsVerification'] == true) {
+          ErrorHandler.showInfoSnackBar(context, message: message);
+          Navigator.pushReplacementNamed(
+            context,
+            '/otp-verification',
+            arguments: result['email'] ?? email,
+          );
+        } else {
+          // Fallback, in case backend logic changes
+          ErrorHandler.showSuccessSnackBar(context, message: 'Registration successful! Please login.');
+          Navigator.pushReplacementNamed(context, '/login');
+        }
       } else {
+        // FAILURE: Handle error response from backend
         ErrorHandler.showErrorSnackBar(
           context,
-          message: authProvider.errorMessage ??
-              'Registration failed. Please try again.',
-          onRetry: _handleRegister,
+          message: authProvider.errorMessage ?? 'Registration failed. Please try again.',
         );
       }
     }
@@ -100,7 +94,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // ✅ Clean Modern Header Section
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -124,8 +117,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ],
                           ),
                           const SizedBox(height: 40),
-
-                          // ✅ Form Fields with Better Spacing
                           CustomTextField(
                             label: 'Email Address',
                             hint: 'Enter your email',
@@ -140,11 +131,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   .hasMatch(value)) {
                                 return 'Please enter a valid email';
                               }
+                              if (Disposable.instance.hasValidEmail(value) == false) {
+                                return 'Disposable emails are not allowed';
+                              }
                               return null;
                             },
                           ),
                           const SizedBox(height: 20),
-
                           CustomTextField(
                             label: 'Password',
                             hint: 'Create a secure password',
@@ -162,7 +155,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             },
                           ),
                           const SizedBox(height: 20),
-
                           CustomTextField(
                             label: 'Confirm Password',
                             hint: 'Re-enter your password',
@@ -180,8 +172,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             },
                           ),
                           const SizedBox(height: 32),
-
-                          // ✅ Register Button
                           SizedBox(
                             width: double.infinity,
                             height: 56,
@@ -191,8 +181,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                           ),
                           const SizedBox(height: 24),
-
-                          // ✅ Simple Login Link
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [

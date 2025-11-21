@@ -165,6 +165,22 @@ class _DownloadScreenState extends State<DownloadScreen> {
     );
   }
 
+  // ✅ Helper method to navigate and clear
+  void _navigateToHome() {
+    if (_isDownloading) return;
+
+    Navigator.pushReplacementNamed(context, '/home').then((_) {
+      // Clear data AFTER navigation completes
+      if (mounted) {
+        final provider = Provider.of<AssignmentProvider>(
+          context,
+          listen: false,
+        );
+        provider.clearLastSubmission();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final assignmentProvider = Provider.of<AssignmentProvider>(context);
@@ -197,6 +213,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
       canPop: !_isDownloading,
       onPopInvokedWithResult: (didPop, result) {
         if (!didPop) return;
+        // This is fine - only clears AFTER pop completes
         assignmentProvider.clearLastSubmission();
       },
       child: Scaffold(
@@ -204,12 +221,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
           title: const Text('Assignment Ready'),
           leading: IconButton(
             icon: const Icon(Icons.close),
-            onPressed: _isDownloading
-                ? null
-                : () {
-                    assignmentProvider.clearLastSubmission();
-                    Navigator.pushReplacementNamed(context, '/home');
-                  },
+            onPressed: _isDownloading ? null : _navigateToHome, // ✅ FIXED
           ),
         ),
         body: SingleChildScrollView(
@@ -345,16 +357,12 @@ class _DownloadScreenState extends State<DownloadScreen> {
 
               const SizedBox(height: 16),
 
-              // Back Button
+              // ✅ FIXED: Back Button
               SizedBox(
                 width: double.infinity,
                 child: CustomButton(
                   text: 'Back to Home',
-                  onPressed: () {
-                    if (_isDownloading) return;
-                    assignmentProvider.clearLastSubmission();
-                    Navigator.pushReplacementNamed(context, '/home');
-                  },
+                  onPressed: _navigateToHome, // ✅ FIXED - Use helper method
                   isOutlined: true,
                   icon: Iconsax.home,
                 ),

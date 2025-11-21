@@ -1,8 +1,10 @@
 import 'dart:io';
-import 'dart:async'; // ✅ ADDED - For TimeoutException
+import 'dart:async';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../utils/constants.dart';
 import '../models/assignment_model.dart';
+import '../utils/error_handler.dart';
 import 'api_service.dart';
 
 class AssignmentService {
@@ -19,12 +21,21 @@ class AssignmentService {
           'limit': limit,
         };
       } else {
+        // ✅ FIX: Use ErrorHandler.parseApiError instead of ApiService.handleError
         return {
           'success': false,
-          'message': ApiService.handleError(response),
+          'message': ErrorHandler.parseApiError(response),
         };
       }
+    } on DioException catch (e) {
+      // ✅ FIX: Handle DioException properly
+      debugPrint('❌ Check limit DioException: ${e.message}');
+      return {
+        'success': false,
+        'message': ErrorHandler.getErrorMessage(e),
+      };
     } catch (e) {
+      debugPrint('❌ Check limit error: $e');
       return {
         'success': false,
         'message': 'Failed to check submission limit.',
@@ -45,9 +56,9 @@ class AssignmentService {
 
       Response response;
 
-      // ✅ Check if file upload or text mode
+      // Check if file upload or text mode
       if (submission.filePath != null && submission.filePath!.isNotEmpty) {
-        // ✅ FILE mode
+        // FILE mode
         fields['type'] = 'FILE';
         response = await ApiService.multipartPost(
           AppConstants.submitAssignmentUrl,
@@ -56,7 +67,7 @@ class AssignmentService {
           'file',
         );
       } else {
-        // ✅ TEXT mode
+        // TEXT mode
         fields['type'] = 'TEXT';
         fields['text_content'] = submission.assignmentText ?? '';
         response = await ApiService.multipartPost(
@@ -79,6 +90,14 @@ class AssignmentService {
           'message': response.data['message'] ?? 'Failed to submit assignment.',
         };
       }
+    } on DioException catch (e) {
+      // ✅ FIX: Handle DioException properly with ErrorHandler
+      debugPrint('❌ Submit assignment DioException: ${e.response?.statusCode}');
+      debugPrint('❌ Error details: ${e.response?.data}');
+      return {
+        'success': false,
+        'message': ErrorHandler.getErrorMessage(e),
+      };
     } on TimeoutException {
       return {
         'success': false,
@@ -91,12 +110,11 @@ class AssignmentService {
         'message': 'No internet connection. Please check your network.',
       };
     } catch (e) {
-      print('🔴 ERROR TYPE: ${e.runtimeType}');
-      print('🔴 ERROR DETAILS: $e');
-
+      debugPrint('❌ Submit assignment error type: ${e.runtimeType}');
+      debugPrint('❌ Submit assignment error details: $e');
       return {
         'success': false,
-        'message': 'Network error: ${e.toString()}', // Show actual error
+        'message': 'Network error. Please try again.',
       };
     }
   }

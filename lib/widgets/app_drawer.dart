@@ -118,14 +118,14 @@ class AppDrawer extends StatelessWidget {
               gradient: LinearGradient(
                 colors: [
                   AppTheme.primaryColor,
-                  AppTheme.primaryColor.withOpacity(0.85),
+                  AppTheme.primaryColor.withAlpha(217),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: AppTheme.primaryColor.withOpacity(0.3),
+                  color: AppTheme.primaryColor.withAlpha(77),
                   blurRadius: 15,
                   offset: const Offset(0, 5),
                 ),
@@ -140,7 +140,7 @@ class AppDrawer extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: Colors.white.withOpacity(0.3),
+                      color: Colors.white.withAlpha(77),
                       width: 2,
                     ),
                   ),
@@ -167,7 +167,7 @@ class AppDrawer extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withAlpha(51),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -235,8 +235,8 @@ class AppDrawer extends StatelessWidget {
                             gradient: LinearGradient(
                               colors: themeProvider.isDarkMode
                                   ? [
-                                      AppTheme.primaryColor.withOpacity(0.3),
-                                      AppTheme.primaryColor.withOpacity(0.1),
+                                      AppTheme.primaryColor.withAlpha(77),
+                                      AppTheme.primaryColor.withAlpha(26),
                                     ]
                                   : [
                                       Colors.amber[100]!,
@@ -295,7 +295,7 @@ class AppDrawer extends StatelessWidget {
                             },
                             activeThumbColor: AppTheme.primaryColor,
                             activeTrackColor:
-                                AppTheme.primaryColor.withOpacity(0.3),
+                                AppTheme.primaryColor.withAlpha(77),
                             inactiveThumbColor: Colors.grey[400],
                             inactiveTrackColor: Colors.grey[300],
                           ),
@@ -313,10 +313,10 @@ class AppDrawer extends StatelessWidget {
                 // Logout Button
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.red[50]?.withOpacity(isDark ? 0.2 : 1),
+                    color: Colors.red[50]?.withAlpha(isDark ? 51 : 255),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: Colors.red[100]!.withOpacity(isDark ? 0.3 : 1),
+                      color: Colors.red[100]!.withAlpha(isDark ? 77 : 255),
                       width: 1,
                     ),
                   ),
@@ -422,7 +422,7 @@ class AppDrawer extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.1 : 0.05),
+            color: Colors.black.withAlpha(isDark ? 26 : 13),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -439,8 +439,8 @@ class AppDrawer extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                AppTheme.primaryColor.withOpacity(0.2),
-                AppTheme.primaryColor.withOpacity(0.1),
+                AppTheme.primaryColor.withAlpha(51),
+                AppTheme.primaryColor.withAlpha(26),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,

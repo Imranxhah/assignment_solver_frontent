@@ -1,0 +1,7 @@
+The application is sending a verification code to an email address like `jakjsk@hhshs.sjjs` because the current email validation is not very strict. It primarily checks for the basic structure of an email (e.g., something@something.something) and for domains from a known list of disposable email providers. It does not, however, verify if the domain itself (e.g., `hhshs.sjjs`) is a real, registered domain.
+
+I can improve this by using a more comprehensive regular expression for email validation. This will help catch more invalid email formats.
+
+However, please note that this will not be a 100% solution. The only way to be completely sure that an email address is valid is to send an email to it and see if it bounces, or to use a paid third-party email verification service.
+
+Would you like me to proceed with improving the email validation with a more strict regular expression?

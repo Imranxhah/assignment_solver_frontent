@@ -60,76 +60,44 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  // ✅ Parse error messages from backend response
-  String _parseErrorMessage(Map<String, dynamic> result) {
-    final message = result['message'];
 
-    // Check if there are field-specific errors
-    if (result.containsKey('errors') && result['errors'] is Map) {
-      final errors = result['errors'] as Map<String, dynamic>;
 
-      // ✅ UPDATED: Priority: email > password > other (removed username)
-      if (errors.containsKey('email')) {
-        return errors['email'].toString();
-      } else if (errors.containsKey('password')) {
-        return errors['password'].toString();
-      } else {
-        // Return first error found
-        return errors.values.first.toString();
-      }
-    }
-
-    // Return general message or default
-    return message ?? 'Registration failed. Please try again.';
-  }
-
-  // ✅ UPDATED: Register without username
-  Future<bool> register({
+  Future<Map<String, dynamic>> register({
     required String email,
-    // ❌ REMOVED: required String username,
     required String password,
   }) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
-    try {
-      final result = await AuthService.register(
-        email: email,
-        // ❌ REMOVED: username: username,
-        password: password,
-      );
+    final result = await AuthService.register(
+      email: email,
+      password: password,
+    );
 
-      _isLoading = false;
-      if (result['success']) {
-        _errorMessage = null;
-      } else {
-        // ✅ Use error parser
-        _errorMessage = _parseErrorMessage(result);
-      }
-      notifyListeners();
-      return result['success'];
-    } catch (e) {
-      _isLoading = false;
-      _errorMessage = ErrorHandler.getErrorMessage(e);
-      notifyListeners();
-      return false;
+    _isLoading = false;
+    if (!result['success']) {
+      _errorMessage = result['message'];
+    } else {
+      _errorMessage = null; // Clear previous error on success
     }
+    notifyListeners();
+    return result;
   }
 
-  // Activate email
-  Future<bool> activateEmail({
-    required String uid,
-    required String token,
+  // Verify email
+  Future<bool> verifyEmail({
+    required String email,
+    required String code,
   }) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      final result = await AuthService.activateEmail(
-        uid: uid,
-        token: token,
+      final result = await AuthService.verifyEmail(
+        email: email,
+        code: code,
       );
 
       _isLoading = false;
@@ -149,44 +117,36 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+
+
   // Login
-  Future<bool> login({
-    required String email,
-    required String password,
-  }) async {
+  Future<Map<String, dynamic>> login(
+      {required String email, required String password}) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
-    try {
-      final result = await AuthService.login(
-        email: email,
-        password: password,
-      );
+    final result = await AuthService.login(email: email, password: password);
 
-      if (result['success']) {
-        final userResult = await AuthService.getUserInfo();
-        if (userResult['success']) {
-          _user = userResult['user'];
-          _isEmailVerified = _user?.isEmailVerified ?? false;
-          _isProfileCompleted = _user?.profileCompleted ?? false;
-          _errorMessage = null;
-        } else {
-          _errorMessage = userResult['message'];
-        }
+    if (result['success']) {
+      // Directly fetch user info here to ensure we have the latest data
+      final userInfoResult = await AuthService.getUserInfo();
+      if (userInfoResult['success']) {
+        _user = userInfoResult['user'];
+        _isEmailVerified = _user?.isEmailVerified ?? false;
+        _isProfileCompleted = _user?.profileCompleted ?? false;
+        _errorMessage = null;
       } else {
-        _errorMessage = result['message'];
+        // Handle failure to fetch user info after login
+        _errorMessage = userInfoResult['message'];
       }
-
-      _isLoading = false;
-      notifyListeners();
-      return result['success'];
-    } catch (e) {
-      _isLoading = false;
-      _errorMessage = ErrorHandler.getErrorMessage(e);
-      notifyListeners();
-      return false;
+    } else {
+      _errorMessage = result['message'];
     }
+
+    _isLoading = false;
+    notifyListeners();
+    return result;
   }
 
   // Refresh user info
@@ -271,6 +231,110 @@ class AuthProvider with ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  // Forgot password
+  Future<Map<String, dynamic>> forgotPassword(String email) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    final result = await AuthService.forgotPassword(email);
+    
+    _isLoading = false;
+    if (!result['success']) {
+      _errorMessage = result['message'];
+    } else {
+      _errorMessage = null;
+    }
+    notifyListeners();
+    return result;
+  }
+
+  // Reset password
+  Future<bool> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final result = await AuthService.resetPassword(
+        email: email,
+        code: code,
+        newPassword: newPassword,
+      );
+      if (!result['success']) {
+        _errorMessage = result['message'];
+      }
+      _isLoading = false;
+      notifyListeners();
+      return result['success'];
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = ErrorHandler.getErrorMessage(e);
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // Verify password reset code
+  Future<bool> verifyPasswordResetCode(String email, String code) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final result = await AuthService.verifyPasswordResetCode(email, code);
+      if (result['success']) {
+        // Here, the backend returns a message on success, not a token
+        _errorMessage = null;
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      } else {
+        _errorMessage = result['message'];
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      _errorMessage = ErrorHandler.getErrorMessage(e);
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // Change password
+  Future<bool> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final result = await AuthService.changePassword(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
+      if (result['success']) {
+        return true;
+      } else {
+        _errorMessage = result['message'];
+        return false;
+      }
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = ErrorHandler.getErrorMessage(e);
+      notifyListeners();
+      return false;
     }
   }
 }

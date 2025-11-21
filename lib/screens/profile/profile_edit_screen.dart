@@ -170,6 +170,24 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                 );
               },
             ),
+
+            const SizedBox(height: 16),
+
+            // Change Password Button
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                icon: const Icon(Iconsax.lock_1),
+                label: const Text('Change Password'),
+                onPressed: () {
+                  Navigator.pushNamed(context, '/change-password');
+                },
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  side: BorderSide(color: AppTheme.primaryColor),
+                ),
+              ),
+            ),
           ],
         ),
       ),

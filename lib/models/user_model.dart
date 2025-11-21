@@ -3,7 +3,7 @@ import 'profile_model.dart';
 class User {
   final int id;
   final String email;
-  final String username;
+  final String? username; // Made optional
   final bool isEmailVerified;
   final bool profileCompleted;
   final Profile? profile;
@@ -11,7 +11,7 @@ class User {
   User({
     required this.id,
     required this.email,
-    required this.username,
+    this.username, // Made optional
     required this.isEmailVerified,
     required this.profileCompleted,
     this.profile,
@@ -21,7 +21,7 @@ class User {
     return User(
       id: json['id'],
       email: json['email'],
-      username: json['username'],
+      username: json['username'], // Keep this for now, it might be returned from backend
       isEmailVerified: json['is_email_verified'] ?? false,
       profileCompleted: json['profile_completed'] ?? false,
       profile:
@@ -33,7 +33,6 @@ class User {
     return {
       'id': id,
       'email': email,
-      'username': username,
       'is_email_verified': isEmailVerified,
       'profile_completed': profileCompleted,
       'profile': profile?.toJson(),

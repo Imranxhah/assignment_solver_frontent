@@ -156,7 +156,7 @@ class _AssignmentSubmissionScreenState extends State<AssignmentSubmissionScreen>
               Container(
                 height: 46,
                 decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                  color: colorScheme.surfaceContainerHighest.withAlpha(128),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 padding: const EdgeInsets.all(5),
@@ -167,14 +167,14 @@ class _AssignmentSubmissionScreenState extends State<AssignmentSubmissionScreen>
                     borderRadius: BorderRadius.circular(9),
                     boxShadow: [
                       BoxShadow(
-                        color: colorScheme.primary.withOpacity(0.3),
+                        color: colorScheme.primary.withAlpha(77),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
                     ],
                   ),
                   labelColor: Colors.white,
-                  unselectedLabelColor: colorScheme.onSurface.withOpacity(0.5),
+                  unselectedLabelColor: colorScheme.onSurface.withAlpha(128),
                   indicatorSize: TabBarIndicatorSize.tab,
                   dividerColor: Colors.transparent,
                   labelStyle: const TextStyle(
@@ -240,7 +240,7 @@ class _AssignmentSubmissionScreenState extends State<AssignmentSubmissionScreen>
                         color: theme.cardColor,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: colorScheme.outline.withOpacity(0.2),
+                          color: colorScheme.outline.withAlpha(51),
                         ),
                       ),
                       padding: const EdgeInsets.all(16),
@@ -265,13 +265,13 @@ class _AssignmentSubmissionScreenState extends State<AssignmentSubmissionScreen>
                                   color: (_wordCount > 2000
                                           ? AppTheme.errorColor
                                           : colorScheme.primary)
-                                      .withOpacity(0.12),
+                                      .withAlpha(31),
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
                                     color: (_wordCount > 2000
                                             ? AppTheme.errorColor
                                             : colorScheme.primary)
-                                        .withOpacity(0.3),
+                                        .withAlpha(77),
                                     width: 1,
                                   ),
                                 ),
@@ -299,7 +299,7 @@ class _AssignmentSubmissionScreenState extends State<AssignmentSubmissionScreen>
                                 hintText:
                                     'Paste your assignment questions here...',
                                 hintStyle: TextStyle(
-                                  color: colorScheme.onSurface.withOpacity(0.4),
+                                  color: colorScheme.onSurface.withAlpha(102),
                                   fontSize: 14,
                                 ),
                                 border: InputBorder.none,
@@ -323,7 +323,7 @@ class _AssignmentSubmissionScreenState extends State<AssignmentSubmissionScreen>
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: colorScheme.shadow.withOpacity(0.05),
+                      color: colorScheme.shadow.withAlpha(13),
                       blurRadius: 20,
                       offset: const Offset(0, 5),
                     ),
@@ -338,7 +338,7 @@ class _AssignmentSubmissionScreenState extends State<AssignmentSubmissionScreen>
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: colorScheme.primary.withOpacity(0.1),
+                            color: colorScheme.primary.withAlpha(26),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Icon(
@@ -422,7 +422,7 @@ class _AssignmentSubmissionScreenState extends State<AssignmentSubmissionScreen>
                       'Processing typically takes 30-60 seconds',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color:
-                            theme.textTheme.bodySmall?.color?.withOpacity(0.7),
+                            theme.textTheme.bodySmall?.color?.withAlpha(179),
                       ),
                     ),
                   ),

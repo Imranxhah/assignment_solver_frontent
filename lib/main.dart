@@ -1,3 +1,6 @@
+import 'package:assignment_solver_app/screens/profile/change_password_screen.dart';
+import 'package:assignment_solver_app/screens/auth/forgot_password_screen.dart';
+import 'package:assignment_solver_app/screens/auth/reset_password_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'utils/app_theme.dart';
@@ -49,6 +52,21 @@ class MyApp extends StatelessWidget {
             darkTheme: AppTheme.dark,
             themeMode: themeProvider.themeMode,
             initialRoute: '/',
+            onGenerateRoute: (settings) {
+              if (settings.name != null &&
+                  settings.name!.startsWith(ResetPasswordScreen.routeName)) {
+                final uri = Uri.parse(settings.name!);
+                final email = uri.queryParameters['email'];
+                final code = uri.queryParameters['code'];
+
+                if (email != null && code != null) {
+                  return MaterialPageRoute(
+                    builder: (context) => ResetPasswordScreen(email: email, code: code),
+                  );
+                }
+              }
+              return null;
+            },
             routes: {
               '/': (context) => const SplashScreen(),
               '/login': (context) => const LoginScreen(),
@@ -69,6 +87,10 @@ class MyApp extends StatelessWidget {
               '/processing': (context) => const ProcessingScreen(),
               '/download': (context) => const DownloadScreen(),
               '/about': (context) => const AboutPage(),
+              ForgotPasswordScreen.routeName: (context) =>
+                  const ForgotPasswordScreen(),
+              ChangePasswordScreen.routeName: (context) =>
+                  const ChangePasswordScreen(),
             },
           );
         },

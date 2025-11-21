@@ -1,0 +1,10 @@
+Django
+djangorestframework
+djangorestframework-simplejwt
+djoser
+django-cors-headers
+python-decouple
+PyPDF2
+python-pptx
+python-docx
+openpyxl

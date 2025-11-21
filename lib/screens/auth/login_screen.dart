@@ -7,6 +7,7 @@ import '../../widgets/custom_text_field.dart';
 import '../../widgets/loading_overlay.dart';
 import '../../utils/error_handler.dart';
 
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -29,39 +30,49 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _handleLogin() async {
     if (_formKey.currentState!.validate()) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final success = await authProvider.login(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
+      final email = _emailController.text.trim();
+      final password = _passwordController.text;
+
+      final result = await authProvider.login(
+        email: email,
+        password: password,
       );
 
       if (!mounted) return;
 
-      if (success) {
-        // Show success message
+      if (result['success']) {
         ErrorHandler.showSuccessSnackBar(
           context,
           message: 'Login successful!',
         );
-
-        // Navigate based on verification status
-        if (!authProvider.isEmailVerified) {
-          Navigator.pushReplacementNamed(context, '/email-verification');
-        } else if (!authProvider.isProfileCompleted) {
+        if (!authProvider.isProfileCompleted) {
           Navigator.pushReplacementNamed(context, '/profile-completion');
         } else {
           Navigator.pushReplacementNamed(context, '/home');
         }
       } else {
-        // Show error with retry option
-        ErrorHandler.showErrorSnackBar(
-          context,
-          message:
-              authProvider.errorMessage ?? 'Login failed. Please try again.',
-          onRetry: _handleLogin,
-        );
+        if (result['needsVerification'] == true) {
+          // Directly navigate to verification screen
+          ErrorHandler.showInfoSnackBar(
+            context,
+            message: 'Your account is not verified. Please check your email.',
+          );
+          Navigator.pushReplacementNamed(
+            context,
+            '/otp-verification',
+            arguments: email,
+          );
+        } else {
+          ErrorHandler.showErrorSnackBar(
+            context,
+            message: result['message'] ?? 'Incorrect email or password.',
+          );
+        }
       }
     }
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -90,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // ✅ Clean Modern Header
+                          // Header
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -115,7 +126,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           const SizedBox(height: 40),
 
-                          // ✅ Form Fields
+                          // Email Field
                           CustomTextField(
                             label: 'Email Address',
                             hint: 'Enter your email',
@@ -135,6 +146,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           const SizedBox(height: 20),
 
+                          // Password Field
                           CustomTextField(
                             label: 'Password',
                             hint: 'Enter your password',
@@ -151,9 +163,18 @@ class _LoginScreenState extends State<LoginScreen> {
                               return null;
                             },
                           ),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () {
+                                Navigator.pushNamed(context, '/forgot-password');
+                              },
+                              child: const Text('Forgot Password?'),
+                            ),
+                          ),
                           const SizedBox(height: 32),
 
-                          // ✅ Login Button
+                          // Login Button
                           SizedBox(
                             width: double.infinity,
                             height: 56,
@@ -164,7 +185,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           const SizedBox(height: 32),
 
-                          // ✅ Register Link
+                          // Register Link
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [

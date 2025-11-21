@@ -18,6 +18,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
   int _currentStep = 0;
   bool _isProcessing = true;
   late AnimationController _animationController;
+  bool _isCancelled = false;
 
   final List<ProcessingStep> _steps = [
     ProcessingStep(
@@ -61,6 +62,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
 
   @override
   void dispose() {
+    _isCancelled = true;
     _animationController.dispose();
     super.dispose();
   }
@@ -71,33 +73,52 @@ class _ProcessingScreenState extends State<ProcessingScreen>
     final assignmentProvider =
         Provider.of<AssignmentProvider>(context, listen: false);
 
-    // Simulate step progression
-    _updateStep(0); // Uploading
-    await Future.delayed(const Duration(seconds: 2));
+    // Start the API call in the background.
+    final submissionFuture = assignmentProvider.submitAssignment(submission);
 
-    _updateStep(1); // Extracting
-    await Future.delayed(const Duration(seconds: 3));
+    // --- Fake Progress Animation ---
+    // This runs in parallel to the API call.
+    Future<void> runFakeProgress() async {
+      // Step 0: Uploading (10s)
+      if (_isCancelled) return;
+      _updateStep(0);
+      await Future.delayed(const Duration(seconds: 10));
+      
+      // Step 1: Extracting (10s)
+      if (_isCancelled) return;
+      _updateStep(1);
+      await Future.delayed(const Duration(seconds: 10));
 
-    _updateStep(2); // AI Processing
+      // Step 2: AI Processing (waits here until API call finishes)
+      if (_isCancelled) return;
+      _updateStep(2);
+    }
+    
+    // Start the fake progress animation.
+    runFakeProgress();
 
-    // Start actual API call
-    final success = await assignmentProvider.submitAssignment(submission);
+    // Await the real API call.
+    final success = await submissionFuture;
+
+    // Signal that the real process is done, so the fake progress should stop.
+    _isCancelled = true;
 
     if (!mounted) return;
 
     if (success) {
-      _updateStep(3); // Generating PDF - wait until complete
-      await Future.delayed(const Duration(seconds: 2));
+      // If successful, jump to the final steps.
+      _updateStep(3); // Briefly show "Generating PDF"
+      await Future.delayed(const Duration(milliseconds: 300));
 
-      // Mark all as complete
       setState(() {
-        _currentStep = _steps.length;
+        _currentStep = _steps.length; // All steps are now complete
         _isProcessing = false;
       });
 
       await Future.delayed(const Duration(milliseconds: 500));
       Navigator.pushReplacementNamed(context, '/download');
     } else {
+      // If API call failed (e.g., no internet), show the error.
       setState(() => _isProcessing = false);
       _showErrorDialog(
           assignmentProvider.errorMessage ?? 'Failed to process assignment');
@@ -105,7 +126,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
   }
 
   void _updateStep(int step) {
-    if (!mounted) return;
+    if (!mounted || _isCancelled) return;
     setState(() => _currentStep = step);
   }
 
