@@ -4,7 +4,7 @@ import logging
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.conf import settings
 from django.http import FileResponse, Http404
@@ -23,6 +23,7 @@ from .utils import (
 )
 from submissions.models import TemporaryDownload, DailySubmissionCount
 from submissions.views import increment_submission_count
+from .models import AppVersion
 
 # ✅ Setup logging
 logger = logging.getLogger(__name__)
@@ -30,6 +31,24 @@ logger = logging.getLogger(__name__)
 # ✅ Create temp directory in BASE_DIR (not /tmp/)
 TEMP_DIR = os.path.join(settings.BASE_DIR, 'temp_uploads')
 os.makedirs(TEMP_DIR, exist_ok=True)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_app_version(request):
+    platform = request.query_params.get('platform', 'android').lower()
+    try:
+        latest_version = AppVersion.objects.filter(platform=platform).latest('created_at')
+        data = {
+            'platform': latest_version.platform,
+            'version_name': latest_version.version_name,
+            'version_code': latest_version.version_code,
+            'force_update': latest_version.force_update,
+            'release_notes': latest_version.release_notes,
+        }
+        return Response(data)
+    except AppVersion.DoesNotExist:
+        return Response({'error': 'No version information found for this platform.'}, status=status.HTTP_404_NOT_FOUND)
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])

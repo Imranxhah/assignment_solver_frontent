@@ -65,7 +65,6 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
       ErrorHandler.showErrorSnackBar(
         context,
         message: errorMessage,
-        onRetry: _verifyCode,
       );
     }
   }
@@ -95,7 +94,6 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
       ErrorHandler.showErrorSnackBar(
         context,
         message: errorMessage,
-        onRetry: _resendCode,
       );
     }
     setState(() => _isLoading = false);

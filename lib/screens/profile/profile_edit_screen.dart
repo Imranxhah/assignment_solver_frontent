@@ -87,7 +87,6 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
       ErrorHandler.showErrorSnackBar(
         context,
         message: profileProvider.errorMessage ?? 'Failed to update profile',
-        onRetry: _saveProfile,
       );
     }
   }
