@@ -1,16 +1,33 @@
-# assignment_solver_app
+<h1 align="center">Assignment Solver Frontend 📱</h1>
+<p align="center">
+  <img src="https://img.shields.io/badge/Framework-Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white" />
+</p>
 
-A new Flutter project.
+## 📖 Overview
+A mobile application acting as the interface for the **Assignment Solver** tool. Built with Flutter, it enables users to seamlessly submit their queries or assignments and instantly view the generated solutions returned by the Django backend.
 
-## Getting Started
+## ✨ Features
+- **Cross-Platform**: Deployable to both Android and iOS natively with a single codebase.
+- **RESTful Integration**: Synchronizes beautifully with the Python backend to fetch complex data structures.
+- **UX Friendly**: Clean form handling and data presentation.
 
-This project is a starting point for a Flutter application.
+## 🛠️ Installation & Setup
 
-A few resources to get you started if this is your first Flutter project:
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/Imranxhah/assignment_solver_frontent.git
+   cd assignment_solver_frontent
+   ```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+2. **Install pub packages:**
+   ```bash
+   flutter pub get
+   ```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+3. **Execute:**
+   ```bash
+   flutter run
+   ```
+
+---
+*Created by [Imranxhah](https://github.com/Imranxhah)*
